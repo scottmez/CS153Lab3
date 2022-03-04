@@ -70,10 +70,22 @@ return 0; //added to remove compiler warning -- you should decide what to return
 
 
 int shm_close(int id) {
-//you write this too!
+  int i = 0;
 
+  acquire(&(shm_table.lock));// 1. acquire lock on shm_table
+  
+  for (i = 0; i< 64; i++) {// 2. loop through all 64 pages in shm_table
+    if (shm_table.shm_pages[i].id == id) { //3. if found
+      shm_table.shm_pages[i].refcnt--; //a. decrement refcnt
+    }
+    if (shm_table.shm_pages[i].refcnt == 0) { //if refcnt is 0 -> set all the values of the page back to zero
+      shm_table.shm_pages[i].id = 0;
+      shm_table.shm_pages[i].frame = 0;
+      //shm_table.shm_pages[i].refcnt = 0; already done
+    }
+  }
 
+  release(&(shm_table.lock));// 4. release lock on shm_table
 
-
-return 0; //added to remove compiler warning -- you should decide what to return
+  return 0; //added to remove compiler warning -- you should decide what to return
 }
